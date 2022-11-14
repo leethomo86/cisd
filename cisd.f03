@@ -66,7 +66,13 @@
           j = i + 2
         elseIf(command.eq.'-s') then
 !
-!*      -s substitutions                 Substitution levels permitted in truncated CI calculation. 
+!*      -s substitutions                 Substitution levels permitted in truncated CI calculation.
+!*                                       Input is a comma delimited list of numbers inside square 
+!*                                       brackets. The reference is always included and any level
+!*                                       and combination of truncations can be specified. 
+!*
+!*                                       E.g. [1,2,4] specifies truncated CI with all single, double 
+!*                                       and quadruple substitutions.
 !*
           call mqc_get_command_argument(i+1,subs_in)
           j = i+2
@@ -141,9 +147,9 @@
       call fileInfo%getMolData(moleculeInfo)
       call moleculeInfo%print(iOut)
       call fileInfo%getESTObj('wavefunction',wavefunction)
-      call wavefunction%print(iOut,'all')
+      if(iPrint.ge.2) call wavefunction%print(iOut,'all')
       call fileInfo%get2ERIs('regular',eris)
-      call eris%print(iOut,'AO 2ERIs')
+      if(iPrint.ge.4) call eris%print(iOut,'AO 2ERIs')
 !
       if(wavefunction%wf_type.eq.'U') then
         UHF = .true.
@@ -165,22 +171,22 @@
 !
 !     Generate Slater Determinants       
 !
-      if(iPrint.eq.1) write(iOut,*) 'Building Determinant Strings'
+      if(iPrint.ge.2) write(iOut,*) 'Building Determinant Strings'
       isubs = [(i, i=1,int(maxval(subs)))]
       call trci_dets_string(iOut,iPrint,wavefunction%nBasis,wavefunction%nAlpha, &
         Wavefunction%nBeta,isubs,determinants)
 !
 !     Transform one and two-electron integrals to MO basis
 !
-      if(iPrint.eq.1) write(iOut,*) 'Transforming MO integrals'
+      if(iPrint.ge.2) write(iOut,*) 'Transforming MO integrals'
       mo_core_ham = matmul(transpose(wavefunction%MO_Coefficients),matmul(wavefunction%core_Hamiltonian, &
           Wavefunction%MO_Coefficients))
-      if(IPrint.ge.2) call mo_core_ham%print(iOut,'MO Basis Core Hamiltonian') 
+      if(IPrint.ge.3) call mo_core_ham%print(iOut,'MO Basis Core Hamiltonian') 
       call twoERI_trans(iOut,iPrint,wavefunction%MO_Coefficients,ERIs,mo_ERIs)
 !
 !     Generate Hamiltonian Matrix
 !
-      if(iPrint.eq.1) write(iOut,*) 'Building CI Hamiltonian'
+      if(iPrint.eq.2) write(iOut,*) 'Building CI Hamiltonian'
       call subs%unshift(0)
       isubs = subs
       call mqc_build_ci_hamiltonian(iOut,iPrint,wavefunction%nBasis,determinants, &
@@ -188,15 +194,16 @@
 !
 !     Diagonalize Hamiltonian
 !
-      if(iPrint.eq.1) write(iOut,*) 'Diagonalizing CI Hamiltonian'
+      if(iPrint.ge.2) write(iOut,*) 'Diagonalizing CI Hamiltonian'
       call CI_Hamiltonian%diag(wavefunction%pscf_energies,wavefunction%pscf_amplitudes)
-      if(iPrint.ge.1) then 
+      if(iPrint.ge.3) then 
         call wavefunction%pscf_amplitudes%print(iOut,'CI Eigenvectors')
         call wavefunction%pscf_energies%print(iOut,'CI Eigenvalues')
       endIf
 !
       final_energy = Vnn + wavefunction%pscf_energies
-      call final_energy%print(iOut,'Final Energy') 
+      if(iPrint.ge.2) call final_energy%print(iOut,'Final Energy') 
+      call mqc_print(final_energy%at(1),iOut,'Ground State Energy',.true.,.true.,'F16.10')
 !
 !*    NOTES
 !*      Compilation of this program requires the MQC library (https://github.com/MQCPack/mqcPack)

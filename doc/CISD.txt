@@ -12,7 +12,13 @@ OPTIONS
       -p print_level                   Verbosity of output. Default print level is 1. Options
                                        0-4.
 
-      -s substitutions                 Substitution levels permitted in truncated CI calculation. 
+      -s substitutions                 Substitution levels permitted in truncated CI calculation.
+                                       Input is a comma delimited list of numbers inside square 
+                                       brackets. The reference is always included and any level
+                                       and combination of truncations can be specified. 
+
+                                       E.g. [1,2,4] specifies truncated CI with all single, double 
+                                       and quadruple substitutions.
 
       --help                           Output help documentation to terminal.
 
